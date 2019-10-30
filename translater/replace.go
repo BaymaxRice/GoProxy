@@ -1,26 +1,64 @@
 package translater
 
-type replace struct {
+import (
+	"math/rand"
+	"time"
+)
+
+type Replace struct {
 	// 配置
 	conf conf
 }
 
+const passwordLen = 256
+
 type conf struct {
 	// 加密密码
-	EncryptPassword [256]byte
-	DecryptPassword [256]byte
+	EncryptPassword [passwordLen]byte
+	DecryptPassword [passwordLen]byte
 }
 
-// 初始化配置文件
-func (re *replace) Init(confFile string) {
-	// read conf file
-	re.conf = conf{}
+func GetNewConverter() *Replace {
+	ret := &Replace{}
+	ret.init()
+	return ret
 }
 
-func (re replace) TransLater(st []byte) []byte {
+// 初始化
+func (re *Replace) init() {
+	rand.Seed(time.Now().UnixNano())
+	intArr := rand.Perm(passwordLen)
+	for key, value := range intArr {
+		re.conf.EncryptPassword[key] = byte(value)
+		re.conf.DecryptPassword[value] = byte(key)
+	}
+}
+
+func (re *Replace) GetPW() []byte {
+	return re.conf.EncryptPassword[:]
+}
+
+func (re *Replace) GenNewPW(newPW []byte) {
+	for key, value := range newPW {
+		re.conf.EncryptPassword[key] = byte(value)
+		re.conf.DecryptPassword[value] = byte(key)
+	}
+}
+
+func (re Replace) Encrypt(st []byte) []byte {
 	var ret []byte
-	for _, v := range st {
+	for k, v := range st {
 		ret = append(ret, re.conf.EncryptPassword[v])
+		st[k] = re.conf.EncryptPassword[v]
+	}
+	return ret
+}
+
+func (re Replace) Decrypt(st []byte) []byte {
+	var ret []byte
+	for k, v := range st {
+		ret = append(ret, re.conf.DecryptPassword[v])
+		st[k] = re.conf.DecryptPassword[v]
 	}
 	return ret
 }
