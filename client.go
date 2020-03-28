@@ -97,7 +97,7 @@ func (c *Client) Run() error {
 	// 获取监听数据连接，处理数据
 	for {
 		localConn, err := listener.AcceptTCP()
-		fmt.Printf("AcceptTCP: %v success", localConn)
+		fmt.Printf("AcceptTCP: %v success\n", localConn)
 		if err != nil {
 			log.Println(err)
 			continue
@@ -116,7 +116,7 @@ func (c *Client) handleConn(con *net.TCPConn) {
 		fmt.Println("连接远程服务器失败" + err.Error())
 		return
 	}
-	fmt.Printf("DialTCP: %v success", proxyServer)
+	fmt.Printf("DialTCP: %v success\n", proxyServer)
 
 	defer proxyServer.Close()
 
@@ -179,8 +179,8 @@ func (c *Client) EncodeWrite(con *net.TCPConn, bs []byte) (int, error) {
 func (c *Client) EncodeCopy(con *net.TCPConn, dst io.ReadWriteCloser) error {
 	buf := make([]byte, bufSize)
 	for {
-		readCount, errRead := con.Read(buf)
-		fmt.Println("client EncodeCopy ", buf, readCount)
+		readCount, errRead := dst.Read(buf)
+		fmt.Println("client EncodeCopy ", string(buf), readCount, errRead)
 		if errRead != nil {
 			if errRead != io.EOF {
 				return errRead

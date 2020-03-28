@@ -46,6 +46,7 @@ func (re *Replace) GenNewPW(newPW []byte) {
 }
 
 func (re Replace) Encrypt(st []byte) []byte {
+	return st
 	var ret []byte
 	for k, v := range st {
 		ret = append(ret, re.conf.EncryptPassword[v])
@@ -55,6 +56,7 @@ func (re Replace) Encrypt(st []byte) []byte {
 }
 
 func (re Replace) Decrypt(st []byte) []byte {
+	return st
 	var ret []byte
 	for k, v := range st {
 		ret = append(ret, re.conf.DecryptPassword[v])
