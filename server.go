@@ -76,7 +76,6 @@ func (s *Server) LoadConf(confPath string) error {
 }
 
 func (s *Server) Run() error {
-
 	listener, err := net.ListenTCP("tcp", s.LocalAddr)
 	if err != nil {
 		return fmt.Errorf("启动本地监听失败")
@@ -87,7 +86,7 @@ func (s *Server) Run() error {
 	// 获取监听数据连接，处理数据
 	for {
 		localConn, err := listener.AcceptTCP()
-		fmt.Printf("AcceptTCP: %v success", localConn)
+		fmt.Printf("AcceptTCP: %v success\n", localConn)
 		if err != nil {
 			log.Println(err)
 			continue
@@ -107,6 +106,7 @@ func (s *Server) handleConn(con *net.TCPConn) {
 	_, err := s.DecodeRead(con, buf)
 	// 只支持版本5
 	if err != nil || buf[0] != 0x05 {
+		fmt.Println("数据协议版本不对")
 		return
 	}
 
@@ -115,7 +115,9 @@ func (s *Server) handleConn(con *net.TCPConn) {
 	// 获取真正的远程服务的地址
 	n, err := s.DecodeRead(con, buf)
 	// n 最短的长度为7 情况为 ATYP=3 DST.ADDR占用1字节 值为0x0
+	fmt.Printf("获取真正服务器：n：%d, err: %+v \n", n, err)
 	if err != nil || n < 7 {
+		fmt.Println("获取真正服务器出错")
 		return
 	}
 
@@ -123,6 +125,7 @@ func (s *Server) handleConn(con *net.TCPConn) {
 	// CONNECT X'01'
 	if buf[1] != 0x01 {
 		// 目前只支持 CONNECT
+		fmt.Println("客户端请求类型出错")
 		return
 	}
 
@@ -135,6 +138,7 @@ func (s *Server) handleConn(con *net.TCPConn) {
 	case 0x03:
 		//	DOMAINNAME: X'03'
 		ipAddr, err := net.ResolveIPAddr("ip", string(buf[5:n-2]))
+		fmt.Printf("ip:%+v, err: %+v\n", ipAddr, err)
 		if err != nil {
 			return
 		}
@@ -146,6 +150,7 @@ func (s *Server) handleConn(con *net.TCPConn) {
 		return
 	}
 	dPort := buf[n-2:]
+	fmt.Println("port:", dPort)
 	dstAddr := &net.TCPAddr{
 		IP:   dIP,
 		Port: int(binary.BigEndian.Uint16(dPort)),
@@ -154,8 +159,10 @@ func (s *Server) handleConn(con *net.TCPConn) {
 	// 连接真正的远程服务
 	dstServer, err := net.DialTCP("tcp", nil, dstAddr)
 	if err != nil {
+		fmt.Printf("连接真正服务器出错, err:%+v\n", err)
 		return
 	} else {
+		fmt.Println("连接真正服务器成功")
 		defer dstServer.Close()
 		// Conn被关闭时直接清除所有数据 不管没有发送的数据
 		dstServer.SetLinger(0)
@@ -177,6 +184,7 @@ func (s *Server) handleConn(con *net.TCPConn) {
 	go func() {
 		err := s.DecodeCopy(con, dstServer)
 		if err != nil {
+			fmt.Printf("请求远程服务出错，err: %+v\n", err)
 			// 在 copy 的过程中可能会存在网络超时等 error 被 return，只要有一个发生了错误就退出本次工作
 			con.Close()
 			dstServer.Close()
@@ -211,6 +219,7 @@ func (s *Server) DecodeCopy(con *net.TCPConn, dst io.Writer) error {
 
 func (s *Server) DecodeRead(con *net.TCPConn, bs []byte) (n int, err error) {
 	n, err = con.Read(bs)
+	fmt.Println("read data:", bs)
 	if err != nil {
 		return
 	}
@@ -227,7 +236,7 @@ func (s *Server) EncodeWrite(con *net.TCPConn, bs []byte) (int, error) {
 func (s *Server) EncodeCopy(con *net.TCPConn, dst io.ReadWriteCloser) error {
 	buf := make([]byte, bufSize)
 	for {
-		readCount, errRead := con.Read(buf)
+		readCount, errRead := dst.Read(buf)
 		if errRead != nil {
 			if errRead != io.EOF {
 				return errRead
