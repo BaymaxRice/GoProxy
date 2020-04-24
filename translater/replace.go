@@ -10,7 +10,7 @@ type Replace struct {
 	conf conf
 }
 
-const passwordLen = 256
+const passwordLen = 1024
 
 type conf struct {
 	// 加密密码
