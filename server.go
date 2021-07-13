@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"github.com/BaymaxRice/ssr-demo/translater"
+	"github.com/BaymaxRice/go-ssr/translater"
 	"io"
 	"io/ioutil"
 	"log"
@@ -14,7 +14,7 @@ import (
 
 type Server struct {
 	// 数据转换器
-	Converter Converter
+	Converter translater.Converter
 
 	// 本地服务地址
 	LocalAddr *net.TCPAddr `json:"local_addr"`
@@ -47,11 +47,9 @@ func (s *Server) LoadConf(confPath string) error {
 		return fmt.Errorf("配置文件解析失败")
 	}
 
-	switch conf.Mode {
-	case "replace":
-		s.Converter = translater.GetNewConverter()
-	default:
-		return fmt.Errorf("实例化加密函数失败")
+	s.Converter, err = translater.GetNewTranslater(conf.Mode)
+	if err != nil {
+		return err
 	}
 
 	// 如果配置文件已经有密码，则根据此密码生成加密解密秘钥

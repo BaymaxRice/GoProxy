@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/BaymaxRice/ssr-demo/translater"
+	"github.com/BaymaxRice/go-ssr/translater"
 	"io"
 	"io/ioutil"
 	"log"
@@ -12,13 +12,13 @@ import (
 )
 
 type addr struct {
-	Ip   string	`json:"ip"`
+	Ip   string `json:"ip"`
 	Port string `json:"port"`
 }
 
 type Client struct {
 	// 数据转换器
-	Converter Converter
+	Converter translater.Converter
 
 	// 本地服务地址
 	LocalAddr *net.TCPAddr `json:"local_addr"`
@@ -36,7 +36,7 @@ type Conf struct {
 
 	// 加密方式
 	Mode string `json:"mode"`
-	
+
 	Password string `json:"password"`
 }
 
@@ -61,11 +61,9 @@ func (c *Client) LoadConf(confPath string) error {
 		return fmt.Errorf("配置文件解析失败")
 	}
 
-	switch conf.Mode {
-	case "replace":
-		c.Converter = translater.GetNewConverter()
-	default:
-		return fmt.Errorf("实例化加密函数失败")
+	c.Converter, err = translater.GetNewTranslater(conf.Mode)
+	if err != nil {
+		return err
 	}
 
 	if conf.Password != "" {
@@ -137,7 +135,7 @@ func (c *Client) handleConn(con *net.TCPConn) {
 	_ = c.EncodeCopy(proxyServer, con)
 }
 
-func (c *Client) DecodeCopy(con *net.TCPConn,dst io.Writer) error {
+func (c *Client) DecodeCopy(con *net.TCPConn, dst io.Writer) error {
 	buf := make([]byte, bufSize)
 	for {
 		readCount, errRead := c.DecodeRead(con, buf)

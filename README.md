@@ -1,4 +1,4 @@
-# ssr-demo
+# go-ssr
 
 ### 启动命令
 ```shell script

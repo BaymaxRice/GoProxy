@@ -10,22 +10,7 @@ type Replace struct {
 	conf conf
 }
 
-const passwordLen = 1024
-
-type conf struct {
-	// 加密密码
-	EncryptPassword [passwordLen]byte
-	DecryptPassword [passwordLen]byte
-}
-
-func GetNewConverter() *Replace {
-	ret := &Replace{}
-	ret.init()
-	return ret
-}
-
-// 初始化
-func (re *Replace) init() {
+func (re *Replace) Init() {
 	rand.Seed(time.Now().UnixNano())
 	intArr := rand.Perm(passwordLen)
 	for key, value := range intArr {
