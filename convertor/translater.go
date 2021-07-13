@@ -1,10 +1,12 @@
-package translater
+package convertor
 
-import "fmt"
+import (
+	"errors"
+)
 
 const passwordLen = 1024
 
-type Converter interface {
+type Convertor interface {
 	Init()
 	// Encrypt 加密方法
 	Encrypt(st []byte) []byte
@@ -22,15 +24,15 @@ type conf struct {
 	DecryptPassword [passwordLen]byte
 }
 
-var TranslateMap = map[string]Converter{
+var TranslateMap = map[string]Convertor{
 	"plaintext": &Plaintext{},
 	"replace":   &Replace{},
 }
 
-func GetNewTranslater(mode string) (Converter, error) {
+func GetNewConvertor(mode string) (Convertor, error) {
 	obj, ok := TranslateMap[mode]
 	if !ok {
-		return nil, fmt.Errorf("mode 不存在")
+		return nil, errors.New("mode 不存在")
 	}
 	obj.Init()
 	return obj, nil

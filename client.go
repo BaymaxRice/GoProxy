@@ -1,24 +1,23 @@
-package ssr_demo
+package go_ssr
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
-	"github.com/BaymaxRice/go-ssr/translater"
+	"github.com/BaymaxRice/go-ssr/convertor"
+	"github.com/BurntSushi/toml"
 	"io"
-	"io/ioutil"
 	"log"
 	"net"
 )
 
 type addr struct {
-	Ip   string `json:"ip"`
-	Port string `json:"port"`
+	Ip   string `toml:"ip"`
+	Port string `toml:"port"`
 }
 
 type Client struct {
 	// 数据转换器
-	Converter translater.Converter
+	Converter convertor.Convertor
 
 	// 本地服务地址
 	LocalAddr *net.TCPAddr `json:"local_addr"`
@@ -27,17 +26,15 @@ type Client struct {
 	ServerAddr *net.TCPAddr `json:"server_addr"`
 }
 
-type Conf struct {
-	// 本地服务地址
-	LocalAddr addr `json:"local_addr"`
+type ClientConvertor struct {
+	Mode     string `toml:"mode"`
+	Password string `toml:"password"`
+}
 
-	// 服务器地址
-	ServerAddr addr `json:"server_addr"`
-
-	// 加密方式
-	Mode string `json:"mode"`
-
-	Password string `json:"password"`
+type ClientConf struct {
+	LocalAddr  addr            `toml:"local_addr"`  // 本地服务地址
+	ServerAddr addr            `toml:"server_addr"` // 服务器地址
+	Convertor  ClientConvertor `toml:"convertor"`   // 加密方式
 }
 
 const (
@@ -45,29 +42,24 @@ const (
 )
 
 func (c *Client) LoadConf(confPath string) error {
-	defaultConf := "client.json"
+	defaultConf := "client.toml"
 	if confPath != "" {
 		defaultConf = confPath
 	}
 
-	readConf, err := ioutil.ReadFile(defaultConf)
-	if err != nil {
-		return fmt.Errorf("配置文件路径错误")
-	}
-	conf := Conf{}
-	err = json.Unmarshal(readConf, &conf)
-
-	if err != nil {
-		return fmt.Errorf("配置文件解析失败")
-	}
-
-	c.Converter, err = translater.GetNewTranslater(conf.Mode)
+	conf := &ClientConf{}
+	_, err := toml.DecodeFile(defaultConf, conf)
 	if err != nil {
 		return err
 	}
 
-	if conf.Password != "" {
-		pd, _ := base64.StdEncoding.DecodeString(conf.Password)
+	c.Converter, err = convertor.GetNewConvertor(conf.Convertor.Mode)
+	if err != nil {
+		return err
+	}
+
+	if conf.Convertor.Password != "" {
+		pd, _ := base64.StdEncoding.DecodeString(conf.Convertor.Password)
 		c.Converter.GenNewPW(pd)
 	}
 
@@ -89,7 +81,7 @@ func (c *Client) Run() error {
 	if err != nil {
 		return fmt.Errorf("启动本地监听失败")
 	}
-	fmt.Printf("ListenTcp: %v success, LocalAddr:%v", c.LocalAddr, c.LocalAddr)
+	fmt.Printf("ListenTcp: %v success, LocalAddr:%v\n", c.LocalAddr, c.LocalAddr)
 	defer listener.Close()
 
 	// 获取监听数据连接，处理数据

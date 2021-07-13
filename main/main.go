@@ -3,11 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	ssr_demo "github.com/BaymaxRice/go-ssr"
+	go_ssr "github.com/BaymaxRice/go-ssr"
 )
 
 type CmdArgs struct {
-	isServer bool
+	isServer    bool
 	backRunning bool
 	conf        string
 }
@@ -31,7 +31,7 @@ func usage() {
 
 func main() {
 	if cmdArgs.isServer {
-		server := ssr_demo.Server{}
+		server := go_ssr.Server{}
 		err := server.LoadConf(cmdArgs.conf)
 		if err != nil {
 			fmt.Println(err)
@@ -41,7 +41,7 @@ func main() {
 	}
 
 	// 客户端程序
-	client := ssr_demo.Client{}
+	client := go_ssr.Client{}
 	err := client.LoadConf(cmdArgs.conf)
 	if err != nil {
 		fmt.Println(err)

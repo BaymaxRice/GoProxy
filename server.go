@@ -1,11 +1,12 @@
-package ssr_demo
+package go_ssr
 
 import (
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"github.com/BaymaxRice/go-ssr/translater"
+	"github.com/BaymaxRice/go-ssr/convertor"
+	"github.com/BurntSushi/toml"
 	"io"
 	"io/ioutil"
 	"log"
@@ -14,50 +15,46 @@ import (
 
 type Server struct {
 	// 数据转换器
-	Converter translater.Converter
+	Converter convertor.Convertor
 
 	// 本地服务地址
-	LocalAddr *net.TCPAddr `json:"local_addr"`
+	LocalAddr *net.TCPAddr
+}
+
+type ServerConvertor struct {
+	Mode     string `toml:"mode"`
+	Password string `toml:"password"`
 }
 
 type ServerConf struct {
 	// 本地服务地址
-	LocalAddr addr `json:"local_addr"`
-
-	// 加密方式
-	Mode string `json:"mode"`
-
-	Password string `json:"password"`
+	LocalAddr addr            `toml:"local_addr"`
+	Convertor ServerConvertor `toml:"convertor"`
 }
 
 func (s *Server) LoadConf(confPath string) error {
-	defaultConf := "server.json"
+	defaultConf := "server.toml"
 	if confPath != "" {
 		defaultConf = confPath
 	}
 
-	readConf, err := ioutil.ReadFile(defaultConf)
+	conf := &ServerConf{}
+	_, err := toml.DecodeFile(defaultConf, conf)
 	if err != nil {
-		return fmt.Errorf("配置文件路径错误")
-	}
-	conf := ServerConf{}
-	err = json.Unmarshal(readConf, &conf)
-
-	if err != nil {
-		return fmt.Errorf("配置文件解析失败")
+		return err
 	}
 
-	s.Converter, err = translater.GetNewTranslater(conf.Mode)
+	s.Converter, err = convertor.GetNewConvertor(conf.Convertor.Mode)
 	if err != nil {
 		return err
 	}
 
 	// 如果配置文件已经有密码，则根据此密码生成加密解密秘钥
-	if conf.Password != "" {
-		pd, _ := base64.StdEncoding.DecodeString(conf.Password)
+	if conf.Convertor.Password != "" {
+		pd, _ := base64.StdEncoding.DecodeString(conf.Convertor.Password)
 		s.Converter.GenNewPW(pd)
 	} else {
-		conf.Password = base64.StdEncoding.EncodeToString(s.Converter.GetPW())
+		conf.Convertor.Password = base64.StdEncoding.EncodeToString(s.Converter.GetPW())
 		data, err := json.Marshal(conf)
 		if err != nil {
 			return fmt.Errorf("序列化配置失败")
@@ -78,7 +75,7 @@ func (s *Server) Run() error {
 	if err != nil {
 		return fmt.Errorf("启动本地监听失败")
 	}
-	fmt.Printf("ListenTcp: %v success, LocalAddr:%v", s.LocalAddr, s.LocalAddr)
+	fmt.Printf("ListenTcp: %v success, LocalAddr:%v\n", s.LocalAddr, s.LocalAddr)
 	defer listener.Close()
 
 	// 获取监听数据连接，处理数据

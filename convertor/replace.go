@@ -1,4 +1,4 @@
-package translater
+package convertor
 
 import (
 	"math/rand"

@@ -1,4 +1,4 @@
-package translater
+package convertor
 
 type Plaintext struct {
 	// 配置
