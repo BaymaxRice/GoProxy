@@ -1,11 +1,11 @@
-package go_ssr
+package GoProxy
 
 import (
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"github.com/BaymaxRice/go-ssr/convertor"
+	"github.com/BaymaxRice/GoProxy/convertor"
 	"github.com/BurntSushi/toml"
 	"io"
 	"io/ioutil"
@@ -99,6 +99,7 @@ func (s *Server) handleConn(con *net.TCPConn) {
 
 	// 第一个字段VER代表Socks的版本，Socks5默认为0x05，其固定长度为1个字节
 	_, err := s.DecodeRead(con, buf)
+	fmt.Println(string(buf))
 	// 只支持版本5
 	if err != nil || buf[0] != 0x05 {
 		fmt.Println("数据协议版本不对")
@@ -144,8 +145,8 @@ func (s *Server) handleConn(con *net.TCPConn) {
 	default:
 		return
 	}
-	dPort := buf[n-2:]
-	fmt.Println("port:", dPort)
+	dPort := buf[n-2:n]
+	fmt.Println("port:", int(binary.BigEndian.Uint16(dPort)))
 	dstAddr := &net.TCPAddr{
 		IP:   dIP,
 		Port: int(binary.BigEndian.Uint16(dPort)),
@@ -171,13 +172,14 @@ func (s *Server) handleConn(con *net.TCPConn) {
 		  +----+-----+-------+------+----------+----------+
 		*/
 		// 响应客户端连接成功
-		_, _ = s.EncodeWrite(con, []byte{0x05, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
+		_, err = s.EncodeWrite(con, []byte{0x05, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
+		fmt.Printf("write to client err: %+v\n", err)
 	}
 
 	// 进行转发
-	// 从 localUser 读取数据发送到 dstServer
+	// 从 dstServer 读取数据发送到 localUser，这里因为处在翻墙阶段出现网络错误的概率更大
 	go func() {
-		err := s.DecodeCopy(con, dstServer)
+		err := s.DecodeCopy(dstServer, con)
 		if err != nil {
 			fmt.Printf("请求远程服务出错，err: %+v\n", err)
 			// 在 copy 的过程中可能会存在网络超时等 error 被 return，只要有一个发生了错误就退出本次工作
@@ -185,14 +187,14 @@ func (s *Server) handleConn(con *net.TCPConn) {
 			dstServer.Close()
 		}
 	}()
-	// 从 dstServer 读取数据发送到 localUser，这里因为处在翻墙阶段出现网络错误的概率更大
-	_ = s.EncodeCopy(dstServer, con)
+	// 从 localUser 读取数据发送到 dstServer
+	_ = s.EncodeCopy(con, dstServer)
 }
 
-func (s *Server) DecodeCopy(con *net.TCPConn, dst io.Writer) error {
+func (s *Server) DecodeCopy(src *net.TCPConn, dst *net.TCPConn) error {
 	buf := make([]byte, bufSize)
 	for {
-		readCount, errRead := s.DecodeRead(con, buf)
+		readCount, errRead := s.DecodeRead(src, buf)
 		if errRead != nil {
 			if errRead != io.EOF {
 				return errRead
@@ -214,7 +216,7 @@ func (s *Server) DecodeCopy(con *net.TCPConn, dst io.Writer) error {
 
 func (s *Server) DecodeRead(con *net.TCPConn, bs []byte) (n int, err error) {
 	n, err = con.Read(bs)
-	fmt.Println("read data:", bs)
+	fmt.Println("read data:", string(bs))
 	if err != nil {
 		return
 	}
@@ -228,10 +230,10 @@ func (s *Server) EncodeWrite(con *net.TCPConn, bs []byte) (int, error) {
 }
 
 // 从src中源源不断的读取原数据加密后写入到dst，直到src中没有数据可以再读取
-func (s *Server) EncodeCopy(con *net.TCPConn, dst io.ReadWriteCloser) error {
+func (s *Server) EncodeCopy(src *net.TCPConn, dst *net.TCPConn) error {
 	buf := make([]byte, bufSize)
 	for {
-		readCount, errRead := dst.Read(buf)
+		readCount, errRead := src.Read(buf)
 		if errRead != nil {
 			if errRead != io.EOF {
 				return errRead
@@ -240,7 +242,7 @@ func (s *Server) EncodeCopy(con *net.TCPConn, dst io.ReadWriteCloser) error {
 			}
 		}
 		if readCount > 0 {
-			writeCount, errWrite := s.EncodeWrite(con, buf[0:readCount])
+			writeCount, errWrite := s.EncodeWrite(dst, buf[0:readCount])
 			if errWrite != nil {
 				return errWrite
 			}

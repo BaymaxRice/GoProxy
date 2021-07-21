@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	go_ssr "github.com/BaymaxRice/go-ssr"
+	GoProxy "github.com/BaymaxRice/GoProxy"
 )
 
 type CmdArgs struct {
@@ -25,13 +25,13 @@ func init() {
 }
 
 func usage() {
-	fmt.Println("usage:   go-ssr  [-q] [-conf=<filepath>] [-s] [-b]")
+	fmt.Println("usage:   GoProxy  [-q] [-conf=<filepath>] [-s] [-b]")
 	flag.PrintDefaults()
 }
 
 func main() {
 	if cmdArgs.isServer {
-		server := go_ssr.Server{}
+		server := GoProxy.Server{}
 		err := server.LoadConf(cmdArgs.conf)
 		if err != nil {
 			fmt.Println(err)
@@ -41,7 +41,7 @@ func main() {
 	}
 
 	// 客户端程序
-	client := go_ssr.Client{}
+	client := GoProxy.Client{}
 	err := client.LoadConf(cmdArgs.conf)
 	if err != nil {
 		fmt.Println(err)

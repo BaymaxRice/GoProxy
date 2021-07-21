@@ -20,8 +20,7 @@ type Convertor interface {
 
 type conf struct {
 	// 加密密码
-	EncryptPassword [passwordLen]byte
-	DecryptPassword [passwordLen]byte
+	EncryptPassword []byte
 }
 
 var TranslateMap = map[string]Convertor{

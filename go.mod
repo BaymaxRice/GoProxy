@@ -1,4 +1,4 @@
-module github.com/BaymaxRice/go-ssr
+module github.com/BaymaxRice/GoProxy
 
 go 1.16
 

@@ -1,9 +1,9 @@
-package go_ssr
+package GoProxy
 
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/BaymaxRice/go-ssr/convertor"
+	"github.com/BaymaxRice/GoProxy/convertor"
 	"github.com/BurntSushi/toml"
 	"io"
 	"log"
@@ -60,6 +60,7 @@ func (c *Client) LoadConf(confPath string) error {
 
 	if conf.Convertor.Password != "" {
 		pd, _ := base64.StdEncoding.DecodeString(conf.Convertor.Password)
+		fmt.Println("xxx", pd)
 		c.Converter.GenNewPW(pd)
 	}
 
@@ -124,13 +125,13 @@ func (c *Client) handleConn(con *net.TCPConn) {
 		}
 	}()
 	// 从 localUser 发送数据发送到 proxyServer，这里因为处在翻墙阶段出现网络错误的概率更大
-	_ = c.EncodeCopy(proxyServer, con)
+	_ = c.EncodeCopy(con, proxyServer)
 }
 
-func (c *Client) DecodeCopy(con *net.TCPConn, dst io.Writer) error {
+func (c *Client) DecodeCopy(src *net.TCPConn, dst *net.TCPConn) error {
 	buf := make([]byte, bufSize)
 	for {
-		readCount, errRead := c.DecodeRead(con, buf)
+		readCount, errRead := c.DecodeRead(src, buf)
 		fmt.Println("client DecodeCopy ", buf, readCount)
 		if errRead != nil {
 			if errRead != io.EOF {
@@ -166,11 +167,11 @@ func (c *Client) EncodeWrite(con *net.TCPConn, bs []byte) (int, error) {
 }
 
 // 从src中源源不断的读取原数据加密后写入到dst，直到src中没有数据可以再读取
-func (c *Client) EncodeCopy(con *net.TCPConn, dst io.ReadWriteCloser) error {
+func (c *Client) EncodeCopy(src *net.TCPConn, dst *net.TCPConn) error {
 	buf := make([]byte, bufSize)
 	for {
-		readCount, errRead := dst.Read(buf)
-		fmt.Println("client EncodeCopy ", string(buf), readCount, errRead)
+		readCount, errRead := src.Read(buf)
+		fmt.Printf("client EncodeCopy %s, %d, %+v\n ", string(buf), readCount, errRead)
 		if errRead != nil {
 			if errRead != io.EOF {
 				return errRead
@@ -179,7 +180,7 @@ func (c *Client) EncodeCopy(con *net.TCPConn, dst io.ReadWriteCloser) error {
 			}
 		}
 		if readCount > 0 {
-			writeCount, errWrite := c.EncodeWrite(con, buf[0:readCount])
+			writeCount, errWrite := c.EncodeWrite(dst, buf[0:readCount])
 			if errWrite != nil {
 				return errWrite
 			}

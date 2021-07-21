@@ -13,9 +13,9 @@ type Replace struct {
 func (re *Replace) Init() {
 	rand.Seed(time.Now().UnixNano())
 	intArr := rand.Perm(passwordLen)
+	re.conf.EncryptPassword = make([]byte, passwordLen)
 	for key, value := range intArr {
 		re.conf.EncryptPassword[key] = byte(value)
-		re.conf.DecryptPassword[value] = byte(key)
 	}
 }
 
@@ -24,28 +24,24 @@ func (re *Replace) GetPW() []byte {
 }
 
 func (re *Replace) GenNewPW(newPW []byte) {
+	re.conf.EncryptPassword = make([]byte, len(newPW))
 	for key, value := range newPW {
 		re.conf.EncryptPassword[key] = byte(value)
-		re.conf.DecryptPassword[value] = byte(key)
 	}
 }
 
 func (re Replace) Encrypt(st []byte) []byte {
-	return st
-	var ret []byte
-	for k, v := range st {
-		ret = append(ret, re.conf.EncryptPassword[v])
-		st[k] = re.conf.EncryptPassword[v]
+	var ret = make([]byte, len(st))
+	for k, v := range re.conf.EncryptPassword {
+		ret[v] = st[k]
 	}
 	return ret
 }
 
 func (re Replace) Decrypt(st []byte) []byte {
-	return st
-	var ret []byte
-	for k, v := range st {
-		ret = append(ret, re.conf.DecryptPassword[v])
-		st[k] = re.conf.DecryptPassword[v]
+	var ret = make([]byte, len(st))
+	for k, v := range re.conf.EncryptPassword {
+		ret[k] = st[v]
 	}
 	return ret
 }

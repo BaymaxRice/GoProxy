@@ -1,4 +1,4 @@
-# go-ssr
+# GoProxy
 
 ### 启动命令
 ```shell script
