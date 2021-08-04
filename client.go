@@ -60,7 +60,6 @@ func (c *Client) LoadConf(confPath string) error {
 
 	if conf.Convertor.Password != "" {
 		pd, _ := base64.StdEncoding.DecodeString(conf.Convertor.Password)
-		fmt.Println("xxx", pd)
 		c.Converter.GenNewPW(pd)
 	}
 

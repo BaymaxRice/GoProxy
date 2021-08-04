@@ -4,7 +4,7 @@ import (
 	"errors"
 )
 
-const passwordLen = 1024
+const passwordLen = 256
 
 type Convertor interface {
 	Init()
@@ -21,6 +21,7 @@ type Convertor interface {
 type conf struct {
 	// 加密密码
 	EncryptPassword []byte
+	DecryptPassword []byte
 }
 
 var TranslateMap = map[string]Convertor{

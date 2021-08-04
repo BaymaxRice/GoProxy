@@ -14,8 +14,10 @@ func (re *Replace) Init() {
 	rand.Seed(time.Now().UnixNano())
 	intArr := rand.Perm(passwordLen)
 	re.conf.EncryptPassword = make([]byte, passwordLen)
+	re.conf.DecryptPassword = make([]byte, passwordLen)
 	for key, value := range intArr {
 		re.conf.EncryptPassword[key] = byte(value)
+		re.conf.DecryptPassword[value] = byte(key)
 	}
 }
 
@@ -24,24 +26,27 @@ func (re *Replace) GetPW() []byte {
 }
 
 func (re *Replace) GenNewPW(newPW []byte) {
+	if len(newPW) > 256 {
+		panic("replace 密码不能长于256")
+	}
 	re.conf.EncryptPassword = make([]byte, len(newPW))
+	re.conf.DecryptPassword = make([]byte, len(newPW))
 	for key, value := range newPW {
 		re.conf.EncryptPassword[key] = byte(value)
+		re.conf.DecryptPassword[value] = byte(key)
 	}
 }
 
 func (re Replace) Encrypt(st []byte) []byte {
-	var ret = make([]byte, len(st))
-	for k, v := range re.conf.EncryptPassword {
-		ret[v] = st[k]
+	for k, v := range st {
+		st[k] = re.conf.EncryptPassword[v]
 	}
-	return ret
+	return st
 }
 
 func (re Replace) Decrypt(st []byte) []byte {
-	var ret = make([]byte, len(st))
-	for k, v := range re.conf.EncryptPassword {
-		ret[k] = st[v]
+	for k, v := range st {
+		st[k] = re.conf.DecryptPassword[v]
 	}
-	return ret
+	return st
 }
