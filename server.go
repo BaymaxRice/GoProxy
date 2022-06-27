@@ -5,12 +5,14 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"github.com/BaymaxRice/GoProxy/convertor"
-	"github.com/BurntSushi/toml"
 	"io"
 	"io/ioutil"
 	"log"
 	"net"
+
+	"github.com/BurntSushi/toml"
+
+	"github.com/BaymaxRice/GoProxy/convertor"
 )
 
 type Server struct {
@@ -145,7 +147,7 @@ func (s *Server) handleConn(con *net.TCPConn) {
 	default:
 		return
 	}
-	dPort := buf[n-2:n]
+	dPort := buf[n-2 : n]
 	fmt.Println("port:", int(binary.BigEndian.Uint16(dPort)))
 	dstAddr := &net.TCPAddr{
 		IP:   dIP,
