@@ -3,7 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	GoProxy "github.com/BaymaxRice/GoProxy"
+
+	"github.com/BaymaxRice/GoProxy"
 )
 
 type CmdArgs struct {

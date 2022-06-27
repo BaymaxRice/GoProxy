@@ -1,5 +1,5 @@
 module github.com/BaymaxRice/GoProxy
 
-go 1.16
+go 1.17
 
-require github.com/BurntSushi/toml v0.3.1 // indirect
+require github.com/BurntSushi/toml v1.1.0 // indirect

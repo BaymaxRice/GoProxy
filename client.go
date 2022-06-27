@@ -3,11 +3,13 @@ package GoProxy
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/BaymaxRice/GoProxy/convertor"
-	"github.com/BurntSushi/toml"
 	"io"
 	"log"
 	"net"
+
+	"github.com/BurntSushi/toml"
+
+	"github.com/BaymaxRice/GoProxy/convertor"
 )
 
 type addr struct {
