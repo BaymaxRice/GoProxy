@@ -26,7 +26,7 @@ func init() {
 }
 
 func usage() {
-	fmt.Println("usage:   GoProxy  [-q] [-conf=<filepath>] [-s] [-b]")
+	fmt.Println("usage:   GoProxy [-conf=<filepath>] [-s] [-b]")
 	flag.PrintDefaults()
 }
 
@@ -35,8 +35,7 @@ func main() {
 		server := GoProxy.Server{}
 		err := server.LoadConf(cmdArgs.conf)
 		if err != nil {
-			fmt.Println(err)
-			return
+			panic(fmt.Sprintf("load server conf failed, err: %+v", err))
 		}
 		_ = server.Run()
 	}
@@ -45,8 +44,7 @@ func main() {
 	client := GoProxy.Client{}
 	err := client.LoadConf(cmdArgs.conf)
 	if err != nil {
-		fmt.Println(err)
-		return
+		panic(fmt.Sprintf("load client conf failed, err: %+v", err))
 	}
 
 	_ = client.Run()

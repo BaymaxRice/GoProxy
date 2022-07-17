@@ -85,7 +85,7 @@ func (s *Server) Run() error {
 		localConn, err := listener.AcceptTCP()
 		fmt.Printf("AcceptTCP: %v success\n", localConn)
 		if err != nil {
-			log.Println(err)
+			log.Printf("accept tcp failed, err: %+v\n", err)
 			continue
 		}
 		// localConn被关闭时直接清除所有数据 不管没有发送的数据

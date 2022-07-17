@@ -67,11 +67,11 @@ func (c *Client) LoadConf(confPath string) error {
 
 	c.LocalAddr, err = net.ResolveTCPAddr("tcp", conf.LocalAddr.Ip+":"+conf.LocalAddr.Port)
 	if err != nil {
-		return fmt.Errorf("配置local服务配置失败")
+		return fmt.Errorf("配置local服务配置失败, err: %+v", err)
 	}
 	c.ServerAddr, err = net.ResolveTCPAddr("tcp", conf.ServerAddr.Ip+":"+conf.ServerAddr.Port)
 	if err != nil {
-		return fmt.Errorf("配置server服务配置失败")
+		return fmt.Errorf("配置server服务配置失败, err: %+v", err)
 	}
 
 	return nil
@@ -81,7 +81,7 @@ func (c *Client) Run() error {
 
 	listener, err := net.ListenTCP("tcp", c.LocalAddr)
 	if err != nil {
-		return fmt.Errorf("启动本地监听失败")
+		return fmt.Errorf("启动本地监听失败, err: %+v", err)
 	}
 	fmt.Printf("ListenTcp: %v success, LocalAddr:%v\n", c.LocalAddr, c.LocalAddr)
 	defer listener.Close()
@@ -167,7 +167,7 @@ func (c *Client) EncodeWrite(con *net.TCPConn, bs []byte) (int, error) {
 	return con.Write(ret)
 }
 
-// 从src中源源不断的读取原数据加密后写入到dst，直到src中没有数据可以再读取
+// EncodeCopy 从src中源源不断的读取原数据加密后写入到dst，直到src中没有数据可以再读取
 func (c *Client) EncodeCopy(src *net.TCPConn, dst *net.TCPConn) error {
 	buf := make([]byte, bufSize)
 	for {
