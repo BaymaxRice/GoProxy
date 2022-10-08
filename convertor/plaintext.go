@@ -17,10 +17,10 @@ func (re *Plaintext) GenNewPW(newPW []byte) {
 
 }
 
-func (re Plaintext) Encrypt(st []byte) []byte {
+func (re *Plaintext) Encrypt(st []byte) []byte {
 	return st
 }
 
-func (re Plaintext) Decrypt(st []byte) []byte {
+func (re *Plaintext) Decrypt(st []byte) []byte {
 	return st
 }

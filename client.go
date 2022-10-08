@@ -83,13 +83,13 @@ func (c *Client) Run() error {
 	if err != nil {
 		return fmt.Errorf("启动本地监听失败, err: %+v", err)
 	}
-	fmt.Printf("ListenTcp: %v success, LocalAddr:%v\n", c.LocalAddr, c.LocalAddr)
+	log.Printf("ListenTcp: %v success, LocalAddr:%v\n", c.LocalAddr, c.LocalAddr)
 	defer listener.Close()
 
 	// 获取监听数据连接，处理数据
 	for {
 		localConn, err := listener.AcceptTCP()
-		fmt.Printf("AcceptTCP: %v success\n", localConn)
+		log.Printf("AcceptTCP: %v success\n", localConn)
 		if err != nil {
 			log.Println(err)
 			continue
@@ -105,10 +105,10 @@ func (c *Client) handleConn(con *net.TCPConn) {
 
 	proxyServer, err := net.DialTCP("tcp", nil, c.ServerAddr)
 	if err != nil {
-		fmt.Println("连接远程服务器失败" + err.Error())
+		log.Println("连接远程服务器失败" + err.Error())
 		return
 	}
-	fmt.Printf("DialTCP: %v success\n", proxyServer)
+	log.Printf("DialTCP: %v success\n", proxyServer)
 
 	defer proxyServer.Close()
 
@@ -133,7 +133,7 @@ func (c *Client) DecodeCopy(src *net.TCPConn, dst *net.TCPConn) error {
 	buf := make([]byte, bufSize)
 	for {
 		readCount, errRead := c.DecodeRead(src, buf)
-		fmt.Println("client DecodeCopy ", buf, readCount)
+		log.Println("client DecodeCopy ", buf, readCount)
 		if errRead != nil {
 			if errRead != io.EOF {
 				return errRead
@@ -172,7 +172,7 @@ func (c *Client) EncodeCopy(src *net.TCPConn, dst *net.TCPConn) error {
 	buf := make([]byte, bufSize)
 	for {
 		readCount, errRead := src.Read(buf)
-		fmt.Printf("client EncodeCopy %s, %d, %+v\n ", string(buf), readCount, errRead)
+		log.Printf("client EncodeCopy %s, %d, %+v\n ", string(buf), readCount, errRead)
 		if errRead != nil {
 			if errRead != io.EOF {
 				return errRead

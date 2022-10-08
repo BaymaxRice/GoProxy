@@ -22,7 +22,7 @@ func (re *Replace) Init() {
 }
 
 func (re *Replace) GetPW() []byte {
-	return re.conf.EncryptPassword[:]
+	return re.conf.EncryptPassword
 }
 
 func (re *Replace) GenNewPW(newPW []byte) {
@@ -32,19 +32,19 @@ func (re *Replace) GenNewPW(newPW []byte) {
 	re.conf.EncryptPassword = make([]byte, len(newPW))
 	re.conf.DecryptPassword = make([]byte, len(newPW))
 	for key, value := range newPW {
-		re.conf.EncryptPassword[key] = byte(value)
+		re.conf.EncryptPassword[key] = value
 		re.conf.DecryptPassword[value] = byte(key)
 	}
 }
 
-func (re Replace) Encrypt(st []byte) []byte {
+func (re *Replace) Encrypt(st []byte) []byte {
 	for k, v := range st {
 		st[k] = re.conf.EncryptPassword[v]
 	}
 	return st
 }
 
-func (re Replace) Decrypt(st []byte) []byte {
+func (re *Replace) Decrypt(st []byte) []byte {
 	for k, v := range st {
 		st[k] = re.conf.DecryptPassword[v]
 	}

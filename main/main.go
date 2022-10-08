@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 
 	"github.com/BaymaxRice/GoProxy"
 )
@@ -26,7 +27,7 @@ func init() {
 }
 
 func usage() {
-	fmt.Println("usage:   GoProxy [-conf=<filepath>] [-s] [-b]")
+	log.Println("usage:   GoProxy [-conf=<filepath>] [-s] [-b]")
 	flag.PrintDefaults()
 }
 
